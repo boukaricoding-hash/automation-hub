@@ -63,3 +63,33 @@ export async function getAutomationBySlug(
     .first<Row>();
   return row ? toAutomation(row) : null;
 }
+
+export type NewAutomation = {
+  slug: string;
+  title: string;
+  description: string;
+  level: string;
+  fileType: string;
+  platform: string;
+  requirements: string;
+  code: string;
+};
+
+export async function createAutomation(a: NewAutomation): Promise<void> {
+  const { env } = await getCloudflareContext({ async: true });
+  await env.DB.prepare(
+    `INSERT INTO automations (slug, title, description, level, file_type, platform, requirements, code)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+  )
+    .bind(
+      a.slug,
+      a.title,
+      a.description,
+      a.level,
+      a.fileType,
+      a.platform,
+      a.requirements,
+      a.code
+    )
+    .run();
+}

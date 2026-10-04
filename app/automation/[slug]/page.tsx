@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getAutomationBySlug } from "@/data/db";
-import DownloadButton from "@/components/DownloadButton";
+
+export const dynamic = "force-dynamic";
 
 export default async function AutomationPage({
   params,
@@ -29,8 +30,6 @@ export default async function AutomationPage({
         <p>💻 Plateforme : {automation.platform}</p>
         <p>🧰 Prérequis : {automation.requirements}</p>
       </div>
-
-      <DownloadButton slug={automation.slug} fileType={automation.fileType} />
 
       <div className="mt-6 rounded-lg border border-yellow-500 p-4 md:hidden">
         <p className="font-semibold">📱 Tu es sur téléphone ?</p>

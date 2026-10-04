@@ -9,8 +9,10 @@ const levels = ["Toutes", "Débutant", "Intermédiaire", "Avancé"];
 
 export default function HomeClient({
   automations,
+  isAdmin,
 }: {
   automations: Automation[];
+  isAdmin: boolean;
 }) {
   const [search, setSearch] = useState("");
   const [level, setLevel] = useState("Toutes");
@@ -25,7 +27,17 @@ export default function HomeClient({
     <main className="mx-auto max-w-2xl p-6">
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-3xl font-bold">AUTOMATION HUB</h1>
-        <AuthButton />
+        <div className="flex items-center gap-3">
+          {isAdmin && (
+            <Link
+              href="/admin"
+              className="rounded-lg border border-yellow-500 px-3 py-1 text-sm"
+            >
+              Administration
+            </Link>
+          )}
+          <AuthButton />
+        </div>
       </div>
       <input
         type="text"

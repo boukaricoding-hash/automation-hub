@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { headers } from "next/headers";
 import { getAuth } from "@/lib/auth";
+import AdminForm from "@/components/AdminForm";
 
 export const dynamic = "force-dynamic";
 
@@ -36,6 +37,8 @@ export default async function AdminPage() {
     <main className="mx-auto max-w-2xl p-6">
       <h1 className="text-3xl font-bold">Administration</h1>
       <p className="mt-2">Bienvenue, {session.user.name}.</p>
+      <h2 className="mt-8 text-xl font-semibold">Ajouter une automatisation</h2>
+      <AdminForm />
     </main>
   );
 }

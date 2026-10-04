@@ -24,7 +24,15 @@ export default function AuthButton() {
     <div className="flex items-center gap-3 text-sm">
       <span>{session.user.name}</span>
       <button
-        onClick={() => authClient.signOut()}
+        onClick={() =>
+          authClient.signOut({
+            fetchOptions: {
+              onSuccess: () => {
+                window.location.href = "/";
+              },
+            },
+          })
+        }
         className="rounded-lg border border-gray-600 px-3 py-1"
       >
         Se déconnecter
