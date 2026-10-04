@@ -29,6 +29,14 @@ export default async function AutomationPage({
         <p>🧰 Prérequis : {automation.requirements}</p>
       </div>
 
+      <a
+        href={`/automation/${automation.slug}/download`}
+        download
+        className="mt-6 inline-block rounded-lg bg-white px-5 py-3 font-semibold text-black"
+      >
+        ⬇️ Télécharger le fichier .{automation.fileType}
+      </a>
+
       <div className="mt-6 rounded-lg border border-yellow-500 p-4 md:hidden">
         <p className="font-semibold">📱 Tu es sur téléphone ?</p>
         <p className="mt-1 text-sm">
