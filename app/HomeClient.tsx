@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { Automation } from "@/data/db";
+import AuthButton from "@/components/AuthButton";
 
 const levels = ["Toutes", "Débutant", "Intermédiaire", "Avancé"];
 
@@ -22,8 +23,10 @@ export default function HomeClient({
 
   return (
     <main className="mx-auto max-w-2xl p-6">
-      <h1 className="text-3xl font-bold">AUTOMATION HUB</h1>
-
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="text-3xl font-bold">AUTOMATION HUB</h1>
+        <AuthButton />
+      </div>
       <input
         type="text"
         placeholder="🔎 Rechercher une automatisation"

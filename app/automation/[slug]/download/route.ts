@@ -1,9 +1,19 @@
 import { getAutomationBySlug } from "@/data/db";
+import { getAuth } from "@/lib/auth";
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ slug: string }> }
 ) {
+  const auth = await getAuth();
+  const session = await auth.api.getSession({ headers: request.headers });
+
+  if (!session) {
+    return new Response("Connecte-toi pour télécharger ce fichier.", {
+      status: 401,
+    });
+  }
+
   const { slug } = await params;
   const automation = await getAutomationBySlug(slug);
 
