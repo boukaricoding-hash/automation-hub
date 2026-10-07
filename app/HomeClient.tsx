@@ -1479,7 +1479,8 @@ function DetailPanel({
 /* ════════════════════════════════════════════════════════════════════
    9. PAGE D'ACCUEIL : header, recherche, gouttes, slides, panneau
    ════════════════════════════════════════════════════════════════════ */
-
+// Résultat de recherche renvoyé par /api/search
+type SearchHit = { key: string; slug: string; title: string; levels: string[] };
 export default function HomeClient({
   automations,
   isAdmin,
@@ -1499,7 +1500,7 @@ export default function HomeClient({
   const [detailVisible, setDetailVisible] = useState(false);
   const [animKey, setAnimKey] = useState(0); // relance l'animation à chaque recherche
   const [signingOut, setSigningOut] = useState(false);
-
+  const [results, setResults] = useState<SearchHit[] | null>(null); // null = pas encore de réponse
   // Bienvenue : salutation selon l'heure + message qui change
   const [greeting, setGreeting] = useState("Bonjour");
   const [msgIdx, setMsgIdx] = useState(0);
@@ -1515,17 +1516,9 @@ export default function HomeClient({
   const wheelLock = useRef(false);
   const touchY = useRef<number | null>(null);
 
-  // Recherche : par titre ou catégorie
-  const q = search.trim().toLowerCase();
-  const filtered = groups.filter(
-    (g) =>
-      q === "" ||
-      g.variants.some(
-        (v) =>
-          v.title.toLowerCase().includes(q) ||
-          (v.category ?? "").toLowerCase().includes(q)
-      )
-  );
+  // La recherche interroge toute la base (voir plus bas) : les slides restent les 5 du jour
+  const q = search.trim();
+  const filtered = groups;
   const total = filtered.length;
   const detail = automations.find((a) => a.slug === detailSlug) ?? null;
 
@@ -1559,14 +1552,33 @@ export default function HomeClient({
 
   const onSearchChange = (value: string) => {
     setSearch(value);
-    setPrev(null);
-    setActive(0);
-    setAnimKey((k) => k + 1);
   };
 
   useEffect(() => {
     if (searchOpen) inputRef.current?.focus();
   }, [searchOpen]);
+    // Recherche dans TOUTES les automatisations (pas seulement les 5 du jour)
+  useEffect(() => {
+    const term = search.trim();
+    if (term === "") {
+      setResults(null);
+      return;
+    }
+    const ctrl = new AbortController();
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(term)}`, {
+          signal: ctrl.signal,
+        });
+        const data = (await res.json()) as { items?: SearchHit[] };
+        setResults(data.items ?? []);
+      } catch {}
+    }, 250);
+    return () => {
+      clearTimeout(timer);
+      ctrl.abort();
+    };
+  }, [search]);
 
   // Salutation selon l'heure + rotation des messages de bienvenue
   useEffect(() => {
@@ -1719,6 +1731,22 @@ export default function HomeClient({
 
           {/* Coin droit : admin, recherche, compte */}
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+                        {/* Voir toutes les automatisations : texte sur grand écran, icône sur mobile */}
+            <Link
+              href="/automations"
+              className="hidden items-center gap-2 rounded-sm border border-border-strong bg-surface px-4 py-2 text-sm font-medium text-foreground-secondary transition hover:border-primary hover:text-primary md:inline-flex"
+            >
+              <Ico d="M3 3h7v7H3z|M14 3h7v7h-7z|M14 14h7v7h-7z|M3 14h7v7H3z" className="h-4 w-4" />
+              Voir toutes
+            </Link>
+            <Link
+              href="/automations"
+              aria-label="Voir toutes les automatisations"
+              title="Voir toutes les automatisations"
+              className="grid h-10 w-10 place-items-center rounded-sm bg-surface text-foreground shadow-sm transition hover:bg-secondary hover:text-on-secondary md:hidden"
+            >
+              <Ico d="M3 3h7v7H3z|M14 3h7v7h-7z|M14 14h7v7h-7z|M3 14h7v7H3z" className="h-[18px] w-[18px]" />
+            </Link>
             {isAdmin && (
               <>
                 {/* Grand écran : bouton texte */}
@@ -1816,37 +1844,56 @@ export default function HomeClient({
               }}
             />
           </div>
-
-          {/* Petits résultats (affichés seulement quand on tape) */}
+          {/* Résultats : toute la base, pas seulement les 5 du jour */}
           {q !== "" && (
-            <ul className="mt-1 max-h-60 overflow-y-auto rounded-sm border border-border bg-surface/95 shadow-md backdrop-blur">
-              {total === 0 && (
+            <ul className="mt-1 max-h-72 overflow-y-auto rounded-sm border border-border bg-surface/95 shadow-md backdrop-blur">
+              {results === null && (
+                <li className="px-3 py-2.5 text-sm text-foreground-secondary">Recherche…</li>
+              )}
+              {results !== null && results.length === 0 && (
                 <li className="px-3 py-2.5 text-sm text-foreground-secondary">
                   Aucune automatisation trouvée.
                 </li>
               )}
-              {filtered.slice(0, 6).map((g, i) => (
-                <li key={g.key}>
-                  <button
-                    onClick={() => {
-                      setSearchOpen(false);
-                      goTo(i);
-                    }}
-                    className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left text-sm transition hover:bg-background-alt"
+              {(results ?? []).map((hit) => {
+                // Dans les 5 du jour ? On glisse vers le slide. Sinon on ouvre /?a=slug
+                const idx = groups.findIndex((g) =>
+                  g.variants.some((v) => v.slug === hit.slug)
+                );
+                return (
+                  <li key={hit.key}>
+                    <button
+                      onClick={() => {
+                        setSearchOpen(false);
+                        if (idx >= 0) goTo(idx);
+                        else window.location.assign(`/?a=${hit.slug}`);
+                      }}
+                      className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left text-sm transition hover:bg-background-alt"
+                    >
+                      <span className="line-clamp-1">{hit.title}</span>
+                      <span className="flex shrink-0 items-center gap-1">
+                        {hit.levels.map((l) => (
+                          <span
+                            key={l}
+                            title={l}
+                            className={`h-2 w-2 rounded-full ${levelDot[l] ?? "bg-foreground-muted"}`}
+                          />
+                        ))}
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+              {results !== null && results.length > 0 && (
+                <li>
+                  <Link
+                    href={`/automations?q=${encodeURIComponent(q)}`}
+                    className="block px-3 py-2.5 text-sm font-semibold text-primary transition hover:bg-background-alt"
                   >
-                    <span className="line-clamp-1">{g.variants[0].title}</span>
-                    <span className="flex shrink-0 items-center gap-1">
-                      {g.variants.map((v) => (
-                        <span
-                          key={v.id}
-                          title={v.level}
-                          className={`h-2 w-2 rounded-full ${levelDot[v.level] ?? "bg-foreground-muted"}`}
-                        />
-                      ))}
-                    </span>
-                  </button>
+                    Voir tous les résultats →
+                  </Link>
                 </li>
-              ))}
+              )}
             </ul>
           )}
         </div>

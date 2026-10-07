@@ -234,3 +234,158 @@ export async function deleteReview(
     : await env.DB.prepare(`DELETE FROM reviews WHERE id = ?`).bind(id).run();
   return result.meta.changes > 0;
 }
+
+/* ───────────── ACCUEIL : 5 AUTOMATISATIONS PAR JOUR ───────────── */
+
+// Nombre de slides affichés à l'accueil
+export const HOME_COUNT = 5;
+
+// Renvoie les automatisations du jour : 5 titres uniques qui changent chaque jour,
+// puis la liste boucle et reprend au début.
+export async function getDailyAutomations(): Promise<Automation[]> {
+  const { env } = await getCloudflareContext({ async: true });
+
+  // Nombre de tâches (titres uniques)
+  const countRow = await env.DB.prepare(
+    `SELECT COUNT(DISTINCT lower(trim(title))) AS n FROM automations`
+  ).first<{ n: number }>();
+  const n = countRow?.n ?? 0;
+  if (n === 0) return [];
+
+  // Point de départ du jour (le numéro du jour change à minuit UTC, comme au Togo)
+  const day = Math.floor(Date.now() / 86400000);
+  const start = n <= HOME_COUNT ? 0 : (day * HOME_COUNT) % n;
+
+  const pick = async (limit: number, offset: number) => {
+    const { results } = await env.DB.prepare(
+      `SELECT lower(trim(title)) AS k FROM automations
+       GROUP BY lower(trim(title)) ORDER BY MIN(id) LIMIT ? OFFSET ?`
+    )
+      .bind(limit, offset)
+      .all<{ k: string }>();
+    return results.map((r) => r.k);
+  };
+
+  // Les 5 titres du jour, et si on arrive à la fin de la liste, on complète depuis le début
+  let keys = await pick(HOME_COUNT, start);
+  if (keys.length < HOME_COUNT && n > HOME_COUNT) {
+    keys = keys.concat(await pick(HOME_COUNT - keys.length, 0));
+  }
+
+  // Toutes les variantes (niveaux) de ces 5 titres
+  const marks = keys.map(() => "?").join(",");
+  const { results } = await env.DB.prepare(
+    `SELECT ${COLUMNS}, lower(trim(title)) AS k FROM automations
+     WHERE lower(trim(title)) IN (${marks}) ORDER BY id`
+  )
+    .bind(...keys)
+    .all<Row & { k: string }>();
+
+  // On garde l'ordre des titres choisis
+  results.sort((a, b) => keys.indexOf(a.k) - keys.indexOf(b.k));
+  return results.map(toAutomation);
+}
+// Toutes les variantes (niveaux) de la tâche qui contient ce slug
+export async function getGroupBySlug(slug: string): Promise<Automation[]> {
+  const { env } = await getCloudflareContext({ async: true });
+  const { results } = await env.DB.prepare(
+    `SELECT ${COLUMNS} FROM automations
+     WHERE lower(trim(title)) = (SELECT lower(trim(title)) FROM automations WHERE slug = ?)
+     ORDER BY id`
+  )
+    .bind(slug)
+    .all<Row>();
+  return results.map(toAutomation);
+}
+
+/* ───────────── PAGE « VOIR TOUTES » : recherche + pagination ───────────── */
+
+export const ALL_PER_PAGE = 24;
+
+export type AutomationCard = {
+  key: string;
+  slug: string; // slug du niveau le plus bas (celui qu'on ouvre)
+  title: string;
+  subtitle: string | null;
+  category: string | null;
+  levels: string[];
+  fileType: string;
+  platform: string;
+};
+
+export async function searchAutomations(
+  rawQuery: string,
+  page: number
+): Promise<{ items: AutomationCard[]; total: number }> {
+  const { env } = await getCloudflareContext({ async: true });
+
+  const q = rawQuery.replace(/[%_]/g, "").trim();
+  const filter = q
+    ? `WHERE (title LIKE ? OR category LIKE ? OR subtitle LIKE ?)`
+    : "";
+  const args: string[] = q ? [`%${q}%`, `%${q}%`, `%${q}%`] : [];
+
+  // Nombre de tâches (titres uniques) qui correspondent
+  const countRow = await env.DB.prepare(
+    `SELECT COUNT(DISTINCT lower(trim(title))) AS n FROM automations ${filter}`
+  )
+    .bind(...args)
+    .first<{ n: number }>();
+  const total = countRow?.n ?? 0;
+  if (total === 0) return { items: [], total: 0 };
+
+  // Les titres de la page demandée
+  const offset = (Math.max(page, 1) - 1) * ALL_PER_PAGE;
+  const { results: keyRows } = await env.DB.prepare(
+    `SELECT lower(trim(title)) AS k FROM automations ${filter}
+     GROUP BY lower(trim(title)) ORDER BY MIN(id) LIMIT ? OFFSET ?`
+  )
+    .bind(...args, ALL_PER_PAGE, offset)
+    .all<{ k: string }>();
+  const keys = keyRows.map((r) => r.k);
+  if (keys.length === 0) return { items: [], total };
+
+  // Les niveaux de ces titres (sans le code)
+  const marks = keys.map(() => "?").join(",");
+  const { results } = await env.DB.prepare(
+    `SELECT slug, title, subtitle, category, level, file_type, platform,
+            lower(trim(title)) AS k
+     FROM automations WHERE lower(trim(title)) IN (${marks}) ORDER BY id`
+  )
+    .bind(...keys)
+    .all<{
+      slug: string;
+      title: string;
+      subtitle: string | null;
+      category: string | null;
+      level: string;
+      file_type: string;
+      platform: string;
+      k: string;
+    }>();
+
+  const order = ["Débutant", "Intermédiaire", "Avancé"];
+  const rank = (l: string) => {
+    const i = order.indexOf(l);
+    return i === -1 ? 99 : i;
+  };
+
+  const items: AutomationCard[] = keys.map((k) => {
+    const vs = results
+      .filter((r) => r.k === k)
+      .sort((a, b) => rank(a.level) - rank(b.level));
+    const first = vs[0];
+    return {
+      key: k,
+      slug: first.slug,
+      title: first.title,
+      subtitle: first.subtitle,
+      category: first.category,
+      levels: vs.map((v) => v.level),
+      fileType: first.file_type,
+      platform: first.platform,
+    };
+  });
+
+  return { items, total };
+}
