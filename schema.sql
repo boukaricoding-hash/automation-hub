@@ -3,6 +3,8 @@ CREATE TABLE IF NOT EXISTS automations (
   slug TEXT NOT NULL UNIQUE,
   title TEXT NOT NULL,
   description TEXT NOT NULL,
+  subtitle TEXT,
+  image TEXT,
   category TEXT,
   level TEXT NOT NULL,
   file_type TEXT NOT NULL,

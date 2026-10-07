@@ -1,21 +1,20 @@
 "use server";
 
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { getAuth } from "@/lib/auth";
-import { createAutomation, getAutomationBySlug } from "@/data/db";
-
-export type FormState = { error?: string; success?: string };
+import { getAutomationBySlug, updateAutomation } from "@/data/db";
+import type { FormState } from "@/app/admin/actions";
 
 const LEVELS = ["Débutant", "Intermédiaire", "Avancé"];
 const FILE_TYPES = ["bat", "py", "ps1", "sh"];
-const SLUG_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
 function field(formData: FormData, name: string): string {
   const value = formData.get(name);
   return typeof value === "string" ? value.trim() : "";
 }
 
-export async function addAutomation(
+export async function editAutomation(
   _prev: FormState,
   formData: FormData
 ): Promise<FormState> {
@@ -35,14 +34,11 @@ export async function addAutomation(
   const requirements = field(formData, "requirements");
   const code = String(formData.get("code") ?? "");
 
+  if (!(await getAutomationBySlug(slug))) {
+    return { error: "Automatisation introuvable." };
+  }
   if (!title || title.length > 100) {
     return { error: "Le titre est obligatoire (100 caractères maximum)." };
-  }
-  if (!SLUG_RE.test(slug) || slug.length > 60) {
-    return {
-      error:
-        "Slug invalide : minuscules, chiffres et tirets seulement (ex : eteindre-pc).",
-    };
   }
   if (!description || description.length > 500) {
     return { error: "La description est obligatoire (500 caractères maximum)." };
@@ -56,16 +52,11 @@ export async function addAutomation(
   if (!platform || !requirements) {
     return { error: "La plateforme et les prérequis sont obligatoires." };
   }
-if (!code.trim()) {
-  return { error: "Le code est obligatoire." };
-}
-
-  const existing = await getAutomationBySlug(slug);
-  if (existing) {
-    return { error: "Ce slug existe déjà. Choisis-en un autre." };
+  if (!code.trim()) {
+    return { error: "Le code est obligatoire." };
   }
 
-  await createAutomation({
+  const ok = await updateAutomation({
     slug,
     title,
     description,
@@ -75,6 +66,9 @@ if (!code.trim()) {
     requirements,
     code,
   });
+  if (!ok) {
+    return { error: "La modification n'a pas pu être enregistrée." };
+  }
 
-  return { success: `Automatisation « ${title} » ajoutée.` };
+  redirect(`/automation/${slug}`);
 }
