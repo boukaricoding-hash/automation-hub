@@ -204,7 +204,6 @@ export async function saveReview(r: {
   slug: string;
   userId: string;
   userName: string;
-  image: string | null;
   rating: number;
   comment: string;
 }): Promise<void> {
