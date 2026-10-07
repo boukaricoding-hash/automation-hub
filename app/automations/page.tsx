@@ -10,19 +10,26 @@ const levelDot: Record<string, string> = {
   Avancé: "bg-[#7C3AED]",
 };
 
+const LEVELS = ["Débutant", "Intermédiaire", "Avancé"];
+
 export default async function AllAutomations({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; page?: string }>;
+  searchParams: Promise<{ q?: string; page?: string; level?: string }>;
 }) {
-  const { q = "", page: p } = await searchParams;
+  const { q = "", page: p, level: lv } = await searchParams;
+  const level = lv && LEVELS.includes(lv) ? lv : undefined;
   const page = Math.max(parseInt(p ?? "1", 10) || 1, 1);
-  const { items, total } = await searchAutomations(q, page);
+  const { items, total } = await searchAutomations(q, page, level);
   const pages = Math.max(Math.ceil(total / ALL_PER_PAGE), 1);
 
-  const href = (n: number) =>
-    `/automations?${new URLSearchParams({ ...(q ? { q } : {}), page: String(n) })}`;
-
+  // Adresse du catalogue en gardant la recherche et le niveau choisi
+  const href = (n: number, lvl: string | undefined = level) =>
+    `/automations?${new URLSearchParams({
+      ...(q ? { q } : {}),
+      ...(lvl ? { level: lvl } : {}),
+      page: String(n),
+    })}`;
   return (
     <div className="min-h-dvh bg-background text-foreground">
       {/* Header : mêmes marges que l'accueil */}
@@ -85,6 +92,35 @@ export default async function AllAutomations({
             Chercher
           </button>
         </form>
+                {/* Filtre par niveau */}
+        <div className="mt-5 flex flex-wrap items-center gap-2">
+          {[undefined, ...LEVELS].map((l) => {
+            const active = l === level;
+            const to = `/automations?${new URLSearchParams({
+              ...(q ? { q } : {}),
+              ...(l ? { level: l } : {}),
+              page: "1",
+            })}`;
+            return (
+              <Link
+                key={l ?? "tous"}
+                href={to}
+                className={`inline-flex items-center gap-1.5 rounded-sm px-3 py-1.5 text-sm font-semibold transition ${
+                  active
+                    ? "bg-secondary text-on-secondary"
+                    : "bg-surface text-foreground-secondary shadow-sm hover:text-foreground"
+                }`}
+              >
+                {l && (
+                  <span
+                    className={`h-2 w-2 rounded-full ${levelDot[l] ?? "bg-foreground-muted"}`}
+                  />
+                )}
+                {l ?? "Tous"}
+              </Link>
+            );
+          })}
+        </div>
 
         <p className="mt-4 text-sm text-foreground-secondary">
           {total} automatisation{total > 1 ? "s" : ""}
@@ -101,39 +137,46 @@ export default async function AllAutomations({
           <p className="mt-10 text-foreground-secondary">Aucune automatisation trouvée.</p>
         ) : (
           <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {items.map((it) => (
-              <li key={it.key}>
-                <Link
-                  href={`/?a=${it.slug}`}
-                  className="group flex h-full flex-col rounded-sm bg-surface p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-                >
-                  <p className="font-heading text-[11px] uppercase tracking-[0.18em] text-primary">
-                    {it.category ?? "Automatisation"}
-                  </p>
-                  <h2 className="mt-1.5 line-clamp-2 break-words text-lg leading-snug text-secondary">
+              {items.map((it) => (
+              <li
+                key={it.key}
+                className="relative flex h-full flex-col rounded-sm bg-surface p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+              >
+                <p className="font-heading text-[11px] uppercase tracking-[0.18em] text-primary">
+                  {it.category ?? "Automatisation"}
+                </p>
+                <h2 className="mt-1.5 line-clamp-2 break-words text-lg leading-snug text-secondary">
+                  {/* Le titre couvre toute la carte : un clic ouvre le premier niveau */}
+                  <Link href={`/?a=${it.slug}`} className="after:absolute after:inset-0">
                     {it.title}
-                  </h2>
-                  {it.subtitle && (
-                    <p className="mt-1 line-clamp-1 text-sm text-foreground-secondary">
-                      {it.subtitle}
-                    </p>
-                  )}
+                  </Link>
+                </h2>
+                {it.subtitle && (
+                  <p className="mt-1 line-clamp-1 text-sm text-foreground-secondary">
+                    {it.subtitle}
+                  </p>
+                )}
 
-                  <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1.5 pt-4 text-xs font-medium text-foreground-secondary">
-                    <span className="inline-flex items-center gap-1.5">
-                      {it.levels.map((l) => (
+                <div className="mt-auto pt-4">
+                  {/* Un lien par niveau, au-dessus du lien de la carte */}
+                  <div className="relative z-10 flex flex-wrap gap-1.5">
+                    {it.variants.map((v) => (
+                      <Link
+                        key={v.slug}
+                        href={`/?a=${v.slug}`}
+                        className="inline-flex items-center gap-1.5 rounded-sm bg-background-alt px-2 py-1 text-[11px] font-semibold text-foreground-secondary transition hover:bg-secondary hover:text-on-secondary"
+                      >
                         <span
-                          key={l}
-                          title={l}
-                          className={`h-2 w-2 rounded-full ${levelDot[l] ?? "bg-foreground-muted"}`}
+                          className={`h-2 w-2 rounded-full ${levelDot[v.level] ?? "bg-foreground-muted"}`}
                         />
-                      ))}
-                      {it.levels.length === 1 ? it.levels[0] : `${it.levels.length} niveaux`}
-                    </span>
-                    <span>.{it.fileType}</span>
-                    <span>{it.platform}</span>
+                        {v.level}
+                      </Link>
+                    ))}
                   </div>
-                </Link>
+                  <p className="mt-2 text-xs font-medium text-foreground-secondary">
+                    .{it.fileType} · {it.platform}
+                  </p>
+                </div>
               </li>
             ))}
           </ul>

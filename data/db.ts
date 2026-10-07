@@ -309,21 +309,32 @@ export type AutomationCard = {
   subtitle: string | null;
   category: string | null;
   levels: string[];
+  variants: { slug: string; level: string }[]; // un lien par niveau
   fileType: string;
   platform: string;
 };
 
 export async function searchAutomations(
   rawQuery: string,
-  page: number
+  page: number,
+  level?: string
 ): Promise<{ items: AutomationCard[]; total: number }> {
   const { env } = await getCloudflareContext({ async: true });
 
   const q = rawQuery.replace(/[%_]/g, "").trim();
-  const filter = q
-    ? `WHERE (title LIKE ? OR category LIKE ? OR subtitle LIKE ?)`
-    : "";
-  const args: string[] = q ? [`%${q}%`, `%${q}%`, `%${q}%`] : [];
+
+  // Conditions : le mot cherché (titre, catégorie, sous-titre, niveau) et/ou un niveau précis
+  const conds: string[] = [];
+  const args: string[] = [];
+  if (q) {
+    conds.push(`(title LIKE ? OR category LIKE ? OR subtitle LIKE ? OR level LIKE ?)`);
+    args.push(`%${q}%`, `%${q}%`, `%${q}%`, `%${q}%`);
+  }
+  if (level) {
+    conds.push(`level = ?`);
+    args.push(level);
+  }
+  const filter = conds.length ? `WHERE ${conds.join(" AND ")}` : "";
 
   // Nombre de tâches (titres uniques) qui correspondent
   const countRow = await env.DB.prepare(
@@ -382,6 +393,7 @@ export async function searchAutomations(
       subtitle: first.subtitle,
       category: first.category,
       levels: vs.map((v) => v.level),
+      variants: vs.map((v) => ({ slug: v.slug, level: v.level })),
       fileType: first.file_type,
       platform: first.platform,
     };

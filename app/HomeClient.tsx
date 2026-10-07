@@ -1480,7 +1480,13 @@ function DetailPanel({
    9. PAGE D'ACCUEIL : header, recherche, gouttes, slides, panneau
    ════════════════════════════════════════════════════════════════════ */
 // Résultat de recherche renvoyé par /api/search
-type SearchHit = { key: string; slug: string; title: string; levels: string[] };
+type SearchHit = {
+  key: string;
+  slug: string;
+  title: string;
+  levels: string[];
+  variants: { slug: string; level: string }[];
+};
 export default function HomeClient({
   automations,
   isAdmin,
@@ -1501,6 +1507,7 @@ export default function HomeClient({
   const [animKey, setAnimKey] = useState(0); // relance l'animation à chaque recherche
   const [signingOut, setSigningOut] = useState(false);
   const [results, setResults] = useState<SearchHit[] | null>(null); // null = pas encore de réponse
+    const [filtersOpen, setFiltersOpen] = useState(false); // panneau « + » des niveaux
   // Bienvenue : salutation selon l'heure + message qui change
   const [greeting, setGreeting] = useState("Bonjour");
   const [msgIdx, setMsgIdx] = useState(0);
@@ -1731,22 +1738,62 @@ export default function HomeClient({
 
           {/* Coin droit : admin, recherche, compte */}
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-                        {/* Voir toutes les automatisations : texte sur grand écran, icône sur mobile */}
-            <Link
-              href="/automations"
-              className="hidden items-center gap-2 rounded-sm border border-border-strong bg-surface px-4 py-2 text-sm font-medium text-foreground-secondary transition hover:border-primary hover:text-primary md:inline-flex"
-            >
-              <Ico d="M3 3h7v7H3z|M14 3h7v7h-7z|M14 14h7v7h-7z|M3 14h7v7H3z" className="h-4 w-4" />
-              Voir toutes
-            </Link>
-            <Link
-              href="/automations"
-              aria-label="Voir toutes les automatisations"
-              title="Voir toutes les automatisations"
-              className="grid h-10 w-10 place-items-center rounded-sm bg-surface text-foreground shadow-sm transition hover:bg-secondary hover:text-on-secondary md:hidden"
-            >
-              <Ico d="M3 3h7v7H3z|M14 3h7v7h-7z|M14 14h7v7h-7z|M3 14h7v7H3z" className="h-[18px] w-[18px]" />
-            </Link>
+               {/* Filtres : le « + » ouvre les niveaux */}
+            <div className="relative">
+              {filtersOpen && (
+                <button
+                  aria-label="Fermer les filtres"
+                  onClick={() => setFiltersOpen(false)}
+                  className="fixed inset-0 z-40 cursor-default"
+                />
+              )}
+              <button
+                onClick={() => setFiltersOpen((o) => !o)}
+                aria-label="Filtrer par niveau"
+                aria-expanded={filtersOpen}
+                title="Filtrer par niveau"
+                className="grid h-10 w-10 place-items-center rounded-sm bg-surface text-foreground shadow-sm transition hover:bg-secondary hover:text-on-secondary"
+              >
+                <span
+                  className="transition-transform duration-300"
+                  style={{ transform: filtersOpen ? "rotate(45deg)" : "none" }}
+                >
+                  <Ico d="M12 5v14|M5 12h14" className="h-[18px] w-[18px]" />
+                </span>
+              </button>
+
+              <div
+                className="absolute right-0 top-full z-50 mt-2 w-60 rounded-sm bg-surface/90 p-3 shadow-md backdrop-blur"
+                style={{
+                  opacity: filtersOpen ? 1 : 0,
+                  transform: filtersOpen ? "translateY(0)" : "translateY(-8px)",
+                  pointerEvents: filtersOpen ? "auto" : "none",
+                  transition: `opacity 0.3s ease, transform 0.5s ${EASE}`,
+                }}
+              >
+                <p className="mb-2 font-heading text-[11px] uppercase tracking-[0.18em] text-primary">
+                  Filtrer par niveau
+                </p>
+                <div className="flex flex-col gap-1">
+                  {LEVEL_ORDER.map((l) => (
+                    <Link
+                      key={l}
+                      href={`/automations?level=${encodeURIComponent(l)}`}
+                      className="flex items-center gap-2 rounded-sm px-2.5 py-2 text-sm font-semibold text-foreground-secondary transition hover:bg-background-alt hover:text-foreground"
+                    >
+                      <span className={`h-2 w-2 rounded-full ${levelDot[l] ?? "bg-foreground-muted"}`} />
+                      {l}
+                    </Link>
+                  ))}
+                </div>
+                <Link
+                  href="/automations"
+                  className="mt-3 block px-2.5 text-sm font-semibold text-primary transition hover:underline"
+                >
+                  Tout le catalogue →
+                </Link>
+              </div>
+            </div>
             {isAdmin && (
               <>
                 {/* Grand écran : bouton texte */}
@@ -1861,26 +1908,34 @@ export default function HomeClient({
                   g.variants.some((v) => v.slug === hit.slug)
                 );
                 return (
-                  <li key={hit.key}>
+                  <li
+                    key={hit.key}
+                    className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 px-3 py-2.5 transition hover:bg-background-alt"
+                  >
                     <button
                       onClick={() => {
                         setSearchOpen(false);
                         if (idx >= 0) goTo(idx);
                         else window.location.assign(`/?a=${hit.slug}`);
                       }}
-                      className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left text-sm transition hover:bg-background-alt"
+                      className="min-w-0 flex-1 truncate text-left text-sm"
                     >
-                      <span className="line-clamp-1">{hit.title}</span>
-                      <span className="flex shrink-0 items-center gap-1">
-                        {hit.levels.map((l) => (
-                          <span
-                            key={l}
-                            title={l}
-                            className={`h-2 w-2 rounded-full ${levelDot[l] ?? "bg-foreground-muted"}`}
-                          />
-                        ))}
-                      </span>
+                      {hit.title}
                     </button>
+                    <span className="flex shrink-0 items-center gap-1">
+                      {hit.variants.map((v) => (
+                        <button
+                          key={v.slug}
+                          onClick={() => window.location.assign(`/?a=${v.slug}`)}
+                          className="inline-flex items-center gap-1.5 rounded-sm bg-background-alt px-2 py-1 text-[11px] font-semibold text-foreground-secondary transition hover:bg-secondary hover:text-on-secondary"
+                        >
+                          <span
+                            className={`h-2 w-2 rounded-full ${levelDot[v.level] ?? "bg-foreground-muted"}`}
+                          />
+                          {v.level}
+                        </button>
+                      ))}
+                    </span>
                   </li>
                 );
               })}
