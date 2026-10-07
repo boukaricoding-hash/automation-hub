@@ -32,6 +32,7 @@ export async function addAutomation(
   const level = field(formData, "level");
   const fileType = field(formData, "fileType");
   const platform = field(formData, "platform");
+  const category = field(formData, "category");
   const requirements = field(formData, "requirements");
   const code = String(formData.get("code") ?? "");
 
@@ -49,6 +50,9 @@ export async function addAutomation(
   }
   if (!LEVELS.includes(level)) {
     return { error: "Niveau invalide." };
+  }
+    if (category.length > 50) {
+    return { error: "La catégorie est trop longue (50 caractères maximum)." };
   }
   if (!FILE_TYPES.includes(fileType)) {
     return { error: "Type de fichier non autorisé." };
@@ -69,6 +73,7 @@ if (!code.trim()) {
     slug,
     title,
     description,
+    category: category || null,
     level,
     fileType,
     platform,

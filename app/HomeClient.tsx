@@ -31,12 +31,7 @@ const AMBER = "#F5B544";
 // Ordre d'affichage des niveaux dans le sélecteur
 const LEVEL_ORDER = ["Débutant", "Intermédiaire", "Avancé"];
 
-// Petite pastille de couleur devant chaque niveau
-const levelDot: Record<string, string> = {
-  Débutant: "bg-success",
-  Intermédiaire: "bg-warning",
-  Avancé: "bg-[#7C3AED]",
-};
+
 
 /* ════════════════════════════════════════════════════════════════════
    1a. LES 5 ANIMATIONS D'ENTRÉE DE L'IMAGE
@@ -168,6 +163,7 @@ type SlideDesign = {
 const slideDesigns: Record<string, SlideDesign> = {
   "ranger-telechargements": { image: "/images/dossier.png" },
   "photos-vers-word": { image: "/images/fusion.png", imagePosition: "left" },
+  "ranger-telechargements-pro": { image: "/images/pro.png", imagePosition: "left" },
 };
 
 /* ════════════════════════════════════════════════════════════════════
@@ -606,15 +602,28 @@ function SlideVisual({
       {visual === "image" && (
         <span
           style={rise(c, 1500)}
-          className={`absolute right-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-sm bg-secondary px-2.5 py-1 text-xs font-semibold text-on-secondary sm:right-4 sm:top-4 lg:top-24 ${
+          className={`absolute right-3 top-3 z-10 inline-flex items-center rounded-sm bg-secondary px-3 py-1.5 text-xs font-semibold text-on-secondary sm:right-4 sm:top-4 lg:top-24 ${
             left ? "lg:left-16 lg:right-auto" : "lg:right-16"
           }`}
         >
-          <span className={`h-2 w-2 rounded-full ${levelDot[a.level] ?? "bg-foreground-muted"}`} />
           {a.level}
         </span>
       )}
+      {/* [B1b] Lien « Voir toutes les catégories » (image uniquement), sous le badge du niveau */}
+      {visual === "image" && (
+        <Link
+          href="/automations"
+          style={rise(c, 1800)}
+          className={`absolute right-3 z-10 inline-flex items-center gap-2 rounded-sm bg-primary px-3.5 py-2 text-xs font-semibold text-on-primary shadow-lg transition hover:bg-secondary sm:right-4 sm:text-sm lg:bottom-auto lg:top-[8.5rem] ${
+            isAdmin ? "bottom-14 sm:bottom-16" : "bottom-3 sm:bottom-4"
+          } ${left ? "lg:left-16 lg:right-auto" : "lg:right-16"}`}
+        >
+          Voir toutes les catégories
+          <Ico d="M5 12h14|M13 6l6 6-6 6" className="h-4 w-4" />
+        </Link>
+      )}
 
+      {/* [B3] Numéro (image uniquement) */}
       {/* [B3] Numéro (image uniquement) */}
       {visual === "image" && (
         <span
@@ -887,24 +896,18 @@ function AutomationSlide({
                         role="tab"
                         aria-selected={i === variantIdx}
                         onClick={() => changeVariant(i)}
-                        className={`inline-flex shrink-0 items-center gap-1.5 rounded-sm px-2 py-1 text-[11px] font-semibold transition sm:px-3 sm:text-sm ${
+                        className={`inline-flex shrink-0 items-center rounded-sm px-2.5 py-1.5 text-[11px] font-semibold transition sm:px-4 sm:text-sm ${
                           i === variantIdx
                             ? "bg-secondary text-on-secondary"
-                            : "text-foreground-secondary hover:text-foreground"
+                            : "text-foreground hover:bg-background-alt"
                         }`}
                       >
-                        <span
-                          className={`h-2 w-2 rounded-full ${levelDot[v.level] ?? "bg-foreground-muted"}`}
-                        />
                         {v.level}
                       </button>
                     ))}
                   </div>
                 ) : (
-                  <span className="inline-flex items-center gap-1.5 rounded-sm bg-secondary px-2.5 py-1 text-xs font-semibold text-on-secondary sm:text-sm">
-                    <span
-                      className={`h-2 w-2 rounded-full ${levelDot[a.level] ?? "bg-foreground-muted"}`}
-                    />
+                  <span className="inline-flex items-center rounded-sm bg-secondary px-3 py-1.5 text-xs font-semibold text-on-secondary sm:text-sm">
                     {a.level}
                   </span>
                 )}
@@ -1009,7 +1012,7 @@ function Stars({ value, className = "h-4 w-4" }: { value: number; className?: st
         <svg
           key={n}
           viewBox="0 0 24 24"
-          className={`${className} ${n <= Math.round(value) ? "text-[#F5B544]" : "text-border-strong"}`}
+          className={`${className} ${n <= Math.round(value) ? "text-[#F5B544]" : "text-foreground-muted/50"}`}
           fill="currentColor"
           aria-hidden="true"
         >
@@ -1154,7 +1157,7 @@ function ReviewsSection({
                   <svg
                     viewBox="0 0 24 24"
                     className={`h-5 w-5 transition ${
-                      n <= rating ? "text-[#F5B544]" : "text-border-strong hover:text-[#F5B544]/60"
+                      n <= rating ? "text-[#F5B544]" : "text-foreground-muted hover:text-[#F5B544]"
                     }`}
                     fill="currentColor"
                     aria-hidden="true"
@@ -1318,11 +1321,11 @@ function DetailPanel({
   ];
   return (
     <div className="fixed inset-0 z-[60]" role="dialog" aria-modal="true">
-      {/* Verre dépoli sur toute la page */}
+      {/* Verre dépoli : fond presque opaque pour que le texte reste lisible */}
       <button
         aria-label="Fermer"
         onClick={onClose}
-        className="absolute inset-0 cursor-default bg-gradient-to-br from-background/70 via-background/55 to-secondary/30 backdrop-blur-2xl backdrop-saturate-150"
+        className="absolute inset-0 cursor-default bg-gradient-to-br from-background/95 via-background/90 to-background-alt/90 backdrop-blur-3xl"
         style={{ opacity: visible ? 1 : 0, transition: "opacity 0.7s ease" }}
       />
 
@@ -1348,9 +1351,8 @@ function DetailPanel({
               <h2 className="mt-1 break-words text-2xl text-secondary sm:text-4xl">{a.title}</h2>
               <span
                 style={{ background: AMBER }}
-                className="mt-3 inline-flex items-center gap-1.5 rounded-sm px-2.5 py-1 text-xs font-semibold text-secondary"
+                className="mt-3 inline-flex items-center rounded-sm px-3 py-1.5 text-xs font-semibold text-secondary"
               >
-                <span className={`h-2 w-2 rounded-full ${levelDot[a.level] ?? "bg-foreground-muted"}`} />
                 {a.level}
               </span>
             </div>
@@ -1422,7 +1424,7 @@ function DetailPanel({
                 <div className={`${view === "reviews" ? "hidden" : "block"} min-w-0 lg:block`}>
                   <p
                     style={rise(visible, 400)}
-                    className="whitespace-pre-line text-sm leading-relaxed text-foreground-secondary sm:text-[15px]"
+                    className="whitespace-pre-line text-sm leading-relaxed text-foreground sm:text-[15px]"
                   >
                     {a.description}
                   </p>
@@ -1450,7 +1452,7 @@ function DetailPanel({
 
                   <p
                     style={rise(visible, 700)}
-                    className="mt-4 flex items-center gap-2 text-sm text-foreground-secondary"
+                    className="mt-4 flex items-center gap-2 text-sm font-medium text-foreground"
                   >
                     <Ico d={icons.shield} className="h-4 w-4 shrink-0 text-success" />
                     Lis exactement ce que fait ce fichier avant de le lancer.
@@ -1507,7 +1509,6 @@ export default function HomeClient({
   const [animKey, setAnimKey] = useState(0); // relance l'animation à chaque recherche
   const [signingOut, setSigningOut] = useState(false);
   const [results, setResults] = useState<SearchHit[] | null>(null); // null = pas encore de réponse
-    const [filtersOpen, setFiltersOpen] = useState(false); // panneau « + » des niveaux
   // Bienvenue : salutation selon l'heure + message qui change
   const [greeting, setGreeting] = useState("Bonjour");
   const [msgIdx, setMsgIdx] = useState(0);
@@ -1738,62 +1739,15 @@ export default function HomeClient({
 
           {/* Coin droit : admin, recherche, compte */}
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-               {/* Filtres : le « + » ouvre les niveaux */}
-            <div className="relative">
-              {filtersOpen && (
-                <button
-                  aria-label="Fermer les filtres"
-                  onClick={() => setFiltersOpen(false)}
-                  className="fixed inset-0 z-40 cursor-default"
-                />
-              )}
-              <button
-                onClick={() => setFiltersOpen((o) => !o)}
-                aria-label="Filtrer par niveau"
-                aria-expanded={filtersOpen}
-                title="Filtrer par niveau"
-                className="grid h-10 w-10 place-items-center rounded-sm bg-surface text-foreground shadow-sm transition hover:bg-secondary hover:text-on-secondary"
-              >
-                <span
-                  className="transition-transform duration-300"
-                  style={{ transform: filtersOpen ? "rotate(45deg)" : "none" }}
-                >
-                  <Ico d="M12 5v14|M5 12h14" className="h-[18px] w-[18px]" />
-                </span>
-              </button>
-
-              <div
-                className="absolute right-0 top-full z-50 mt-2 w-60 rounded-sm bg-surface/90 p-3 shadow-md backdrop-blur"
-                style={{
-                  opacity: filtersOpen ? 1 : 0,
-                  transform: filtersOpen ? "translateY(0)" : "translateY(-8px)",
-                  pointerEvents: filtersOpen ? "auto" : "none",
-                  transition: `opacity 0.3s ease, transform 0.5s ${EASE}`,
-                }}
-              >
-                <p className="mb-2 font-heading text-[11px] uppercase tracking-[0.18em] text-primary">
-                  Filtrer par niveau
-                </p>
-                <div className="flex flex-col gap-1">
-                  {LEVEL_ORDER.map((l) => (
-                    <Link
-                      key={l}
-                      href={`/automations?level=${encodeURIComponent(l)}`}
-                      className="flex items-center gap-2 rounded-sm px-2.5 py-2 text-sm font-semibold text-foreground-secondary transition hover:bg-background-alt hover:text-foreground"
-                    >
-                      <span className={`h-2 w-2 rounded-full ${levelDot[l] ?? "bg-foreground-muted"}`} />
-                      {l}
-                    </Link>
-                  ))}
-                </div>
-                <Link
-                  href="/automations"
-                  className="mt-3 block px-2.5 text-sm font-semibold text-primary transition hover:underline"
-                >
-                  Tout le catalogue →
-                </Link>
-              </div>
-            </div>
+            {/* Outils en ligne : ouvre la page /online (carré comme les autres boutons) */}
+            <Link
+              href="/online"
+              aria-label="Outils"
+              title="Outils"
+              className="grid h-10 w-10 place-items-center rounded-sm bg-surface text-foreground shadow-sm transition hover:bg-secondary hover:text-on-secondary"
+            >
+              <Ico d="M13 2L3 14h9l-1 8 10-12h-9z" className="h-[18px] w-[18px]" />
+            </Link>
             {isAdmin && (
               <>
                 {/* Grand écran : bouton texte */}
@@ -1927,11 +1881,8 @@ export default function HomeClient({
                         <button
                           key={v.slug}
                           onClick={() => window.location.assign(`/?a=${v.slug}`)}
-                          className="inline-flex items-center gap-1.5 rounded-sm bg-background-alt px-2 py-1 text-[11px] font-semibold text-foreground-secondary transition hover:bg-secondary hover:text-on-secondary"
+                          className="inline-flex items-center rounded-sm bg-background-alt px-2.5 py-1 text-[11px] font-semibold text-foreground transition hover:bg-secondary hover:text-on-secondary"
                         >
-                          <span
-                            className={`h-2 w-2 rounded-full ${levelDot[v.level] ?? "bg-foreground-muted"}`}
-                          />
                           {v.level}
                         </button>
                       ))}

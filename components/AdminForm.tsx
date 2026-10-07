@@ -67,6 +67,11 @@ export default function AdminForm() {
       </div>
 
       <label className="block">
+        Catégorie (ex : Fichiers, Système, Bureautique)
+        <input name="category" maxLength={50} className={inputClass} />
+      </label>
+
+      <label className="block">
         Plateforme (ex : Windows)
         <input name="platform" required className={inputClass} />
       </label>

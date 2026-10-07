@@ -75,7 +75,7 @@ export type NewAutomation = {
   title: string;
   description: string;
   subtitle?: string | null;
-  image?: string | null;
+  category?: string | null;
   level: string;
   fileType: string;
   platform: string;
@@ -86,7 +86,7 @@ export type NewAutomation = {
 export async function createAutomation(a: NewAutomation): Promise<void> {
   const { env } = await getCloudflareContext({ async: true });
   await env.DB.prepare(
-    `INSERT INTO automations (slug, title, description, subtitle, image, level, file_type, platform, requirements, code)
+    `INSERT INTO automations (slug, title, description, subtitle, category, level, file_type, platform, requirements, code)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   )
     .bind(
@@ -94,7 +94,7 @@ export async function createAutomation(a: NewAutomation): Promise<void> {
       a.title,
       a.description,
       a.subtitle ?? null,
-      a.image ?? null,
+      a.category ?? null,
       a.level,
       a.fileType,
       a.platform,
@@ -102,7 +102,7 @@ export async function createAutomation(a: NewAutomation): Promise<void> {
       a.code
     )
     .run();
-}
+};
 
 export async function updateAutomation(a: NewAutomation): Promise<boolean> {
   const { env } = await getCloudflareContext({ async: true });
@@ -110,7 +110,7 @@ export async function updateAutomation(a: NewAutomation): Promise<boolean> {
     `UPDATE automations
      SET title = ?, description = ?,
          subtitle = COALESCE(?, subtitle),
-         image = COALESCE(?, image),
+         category = COALESCE(?, category),
          level = ?, file_type = ?,
          platform = ?, requirements = ?, code = ?
      WHERE slug = ?`
@@ -119,7 +119,7 @@ export async function updateAutomation(a: NewAutomation): Promise<boolean> {
       a.title,
       a.description,
       a.subtitle ?? null,
-      a.image ?? null,
+      a.category ?? null,
       a.level,
       a.fileType,
       a.platform,

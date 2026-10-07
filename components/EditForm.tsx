@@ -86,6 +86,16 @@ export default function EditForm({ automation }: { automation: Automation }) {
       </div>
 
       <label className="block">
+        Catégorie (ex : Fichiers, Système, Bureautique)
+        <input
+          name="category"
+          maxLength={50}
+          defaultValue={automation.category ?? ""}
+          className={inputClass}
+        />
+      </label>
+
+      <label className="block">
         Plateforme
         <input
           name="platform"
