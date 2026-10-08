@@ -401,3 +401,24 @@ export async function searchAutomations(
 
   return { items, total };
 }
+/* ───────────── STATISTIQUES ───────────── */
+
+// Ajoute 1 au compteur de vues d'une automatisation
+export async function recordView(slug: string): Promise<void> {
+  const { env } = await getCloudflareContext({ async: true });
+  await env.DB.prepare(
+    `UPDATE automations SET views = views + 1 WHERE slug = ?`
+  )
+    .bind(slug)
+    .run();
+}
+
+// Ajoute 1 au compteur de téléchargements d'une automatisation
+export async function recordDownload(slug: string): Promise<void> {
+  const { env } = await getCloudflareContext({ async: true });
+  await env.DB.prepare(
+    `UPDATE automations SET downloads = downloads + 1 WHERE slug = ?`
+  )
+    .bind(slug)
+    .run();
+}

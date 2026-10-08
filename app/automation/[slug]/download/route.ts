@@ -1,4 +1,4 @@
-import { getAutomationBySlug } from "@/data/db";
+import { getAutomationBySlug, recordDownload } from "@/data/db";
 import { getAuth } from "@/lib/auth";
 
 export async function GET(
@@ -20,7 +20,7 @@ export async function GET(
   if (!automation || !automation.code) {
     return new Response("Automatisation introuvable", { status: 404 });
   }
-
+  await recordDownload(slug);
   const content =
     automation.fileType === "bat"
       ? automation.code.replace(/\r?\n/g, "\r\n")

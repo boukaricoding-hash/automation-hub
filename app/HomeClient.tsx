@@ -1619,6 +1619,12 @@ export default function HomeClient({
   // Panneau détails : ouverture / fermeture animées
   const openDetail = (slug: string) => {
     setDetailSlug(slug);
+        // Compte l'ouverture de la fiche (sans attendre la réponse)
+    fetch("/api/view", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slug }),
+    }).catch(() => {});
     requestAnimationFrame(() => requestAnimationFrame(() => setDetailVisible(true)));
   };
   const closeDetail = () => {
