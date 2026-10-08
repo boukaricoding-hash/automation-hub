@@ -422,3 +422,22 @@ export async function recordDownload(slug: string): Promise<void> {
     .bind(slug)
     .run();
 }
+
+export type AutomationStat = {
+  slug: string;
+  title: string;
+  level: string;
+  views: number;
+  downloads: number;
+};
+
+// Statistiques de toutes les automatisations, les plus vues d'abord
+export async function getAutomationStats(): Promise<AutomationStat[]> {
+  const { env } = await getCloudflareContext({ async: true });
+  const { results } = await env.DB.prepare(
+    `SELECT slug, title, level, views, downloads
+     FROM automations
+     ORDER BY views DESC, downloads DESC, id`
+  ).all<AutomationStat>();
+  return results;
+}
