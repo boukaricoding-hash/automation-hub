@@ -963,7 +963,25 @@ function AutomationSlide({
                 Cette automatisation se lance sur un PC : ouvre cette page depuis
                 ton ordinateur pour la télécharger.
               </p>
-
+              {/* Visiteur sur téléphone : envoyer le lien vers son ordinateur */}
+              <button
+                type="button"
+                style={rise(c, 1600)}
+                onClick={async () => {
+                  const url = `${window.location.origin}/?a=${a.slug}`;
+                  try {
+                    if (navigator.share) {
+                      await navigator.share({ title: a.title, url });
+                    } else {
+                      window.prompt("Copie ce lien et ouvre-le sur ton PC :", url);
+                    }
+                  } catch {}
+                }}
+                className="mt-2 inline-flex items-center gap-2 rounded-sm bg-primary px-4 py-2.5 text-sm font-semibold text-on-primary transition hover:bg-primary-dark md:hidden"
+              >
+                <Ico d={icons.copy} />
+                Envoyer ce lien à mon PC
+              </button>
               {/* [H] Boutons : téléchargement + détails (radius sm, pas étirés) */}
               <div
                 style={rise(c, 1650)}
