@@ -42,6 +42,25 @@ export default async function AdminPage() {
 
   return (
     <main className="mx-auto max-w-2xl p-6">
+            <Link
+        href="/"
+        className="mb-6 inline-flex items-center gap-2 rounded-sm bg-surface px-4 py-2.5 text-sm font-semibold text-secondary shadow-sm transition hover:bg-secondary hover:text-on-secondary"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          className="h-4 w-4"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={1.8}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M19 12H5" />
+          <path d="M11 6l-6 6 6 6" />
+        </svg>
+        Retour à l&apos;accueil
+      </Link>
       <h1 className="text-3xl font-bold">Administration</h1>
       <p className="mt-2">Bienvenue, {session.user.name}.</p>
 

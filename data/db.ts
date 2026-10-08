@@ -442,14 +442,36 @@ export async function getAutomationStats(): Promise<AutomationStat[]> {
   return results;
 }
 
-// Enregistre une recherche : le mot cherché et le nombre de résultats trouvés
+// Enregistre une recherche : le mot cherché et le nombre de résultats trouvés.
+// Quand quelqu'un tape ou efface lettre par lettre, on ne garde que le mot le plus complet.
 export async function recordSearch(
   term: string,
   results: number
 ): Promise<void> {
-  const clean = term.trim().toLowerCase().slice(0, 80);
+  const clean = term.trim().toLowerCase().replace(/[%_]/g, "").slice(0, 80);
   if (clean.length < 3) return; // on ignore les débuts de mot trop courts
   const { env } = await getCloudflareContext({ async: true });
+
+  // Un mot plus long vient d'être cherché : la personne est en train d'effacer, on ignore
+  const longer = await env.DB.prepare(
+    `SELECT 1 FROM searches
+     WHERE created_at >= datetime('now', '-8 seconds')
+       AND term LIKE ? || '%' AND term != ?
+     LIMIT 1`
+  )
+    .bind(clean, clean)
+    .first();
+  if (longer) return;
+
+  // Des débuts de ce mot viennent d'être enregistrés : la personne continue de taper, on les retire
+  await env.DB.prepare(
+    `DELETE FROM searches
+     WHERE created_at >= datetime('now', '-8 seconds')
+       AND ? LIKE term || '%' AND term != ?`
+  )
+    .bind(clean, clean)
+    .run();
+
   await env.DB.prepare(`INSERT INTO searches (term, results) VALUES (?, ?)`)
     .bind(clean, results)
     .run();
