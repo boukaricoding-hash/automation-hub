@@ -441,3 +441,36 @@ export async function getAutomationStats(): Promise<AutomationStat[]> {
   ).all<AutomationStat>();
   return results;
 }
+
+// Enregistre une recherche : le mot cherché et le nombre de résultats trouvés
+export async function recordSearch(
+  term: string,
+  results: number
+): Promise<void> {
+  const clean = term.trim().toLowerCase().slice(0, 80);
+  if (clean.length < 3) return; // on ignore les débuts de mot trop courts
+  const { env } = await getCloudflareContext({ async: true });
+  await env.DB.prepare(`INSERT INTO searches (term, results) VALUES (?, ?)`)
+    .bind(clean, results)
+    .run();
+}
+
+export type SearchStat = {
+  term: string;
+  count: number;
+  results: number;
+};
+
+// Les mots les plus cherchés. Avec onlyEmpty : seulement ceux qui n'ont rien donné.
+export async function getSearchStats(onlyEmpty: boolean): Promise<SearchStat[]> {
+  const { env } = await getCloudflareContext({ async: true });
+  const { results } = await env.DB.prepare(
+    `SELECT term, COUNT(*) AS count, MAX(results) AS results
+     FROM searches
+     GROUP BY term
+     ${onlyEmpty ? "HAVING MAX(results) = 0" : ""}
+     ORDER BY count DESC, MAX(created_at) DESC
+     LIMIT 20`
+  ).all<SearchStat>();
+  return results;
+}

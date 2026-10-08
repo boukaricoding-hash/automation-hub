@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { headers } from "next/headers";
 import { getAuth } from "@/lib/auth";
-import { getAutomationStats } from "@/data/db";
+import { getAutomationStats, getSearchStats } from "@/data/db";
 import AdminForm from "@/components/AdminForm";
 
 export const dynamic = "force-dynamic";
@@ -34,7 +34,11 @@ export default async function AdminPage() {
     );
   }
 
-  const stats = await getAutomationStats();
+  const [stats, topSearches, emptySearches] = await Promise.all([
+    getAutomationStats(),
+    getSearchStats(false),
+    getSearchStats(true),
+  ]);
 
   return (
     <main className="mx-auto max-w-2xl p-6">
@@ -62,6 +66,54 @@ export default async function AdminPage() {
           ))}
         </tbody>
       </table>
+
+      <h2 className="mt-12 text-xl font-semibold">Recherches sans résultat</h2>
+      <p className="mt-1 text-sm">
+        Ce que les visiteurs cherchent et que tu n'as pas encore : idées de
+        prochaines automatisations et de vidéos.
+      </p>
+      {emptySearches.length === 0 ? (
+        <p className="mt-4 text-sm">Aucune recherche pour l'instant.</p>
+      ) : (
+        <table className="mt-4 w-full text-left text-sm">
+          <thead>
+            <tr className="border-b border-border-strong">
+              <th className="py-2 pr-4">Mot cherché</th>
+              <th className="py-2 text-right">Fois</th>
+            </tr>
+          </thead>
+          <tbody>
+            {emptySearches.map((s) => (
+              <tr key={s.term} className="border-b border-border">
+                <td className="py-2 pr-4">{s.term}</td>
+                <td className="py-2 text-right">{s.count}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      <h2 className="mt-12 text-xl font-semibold">Recherches les plus fréquentes</h2>
+      {topSearches.length === 0 ? (
+        <p className="mt-4 text-sm">Aucune recherche pour l'instant.</p>
+      ) : (
+        <table className="mt-4 w-full text-left text-sm">
+          <thead>
+            <tr className="border-b border-border-strong">
+              <th className="py-2 pr-4">Mot cherché</th>
+              <th className="py-2 text-right">Fois</th>
+            </tr>
+          </thead>
+          <tbody>
+            {topSearches.map((s) => (
+              <tr key={s.term} className="border-b border-border">
+                <td className="py-2 pr-4">{s.term}</td>
+                <td className="py-2 text-right">{s.count}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
 
       <h2 className="mt-12 text-xl font-semibold">Ajouter une automatisation</h2>
       <AdminForm />
