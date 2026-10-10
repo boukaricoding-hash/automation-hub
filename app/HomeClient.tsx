@@ -20,7 +20,8 @@ import DeleteButton from "@/components/DeleteButton";
    ════════════════════════════════════════════════════════════════════ */
 
 // Image utilisée par défaut (quand une automatisation n'a pas la sienne)
-const HERO_IMAGE = "/images/dossier.png";
+const HERO_IMAGE = "/images/dossier.webp";
+
 
 // Courbe d'animation très douce
 const EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
@@ -162,9 +163,10 @@ type SlideDesign = {
 };
 
 const slideDesigns: Record<string, SlideDesign> = {
-  "ranger-telechargements": { image: "/images/dossier.png" },
-  "photos-vers-word": { image: "/images/fusion.png", imagePosition: "left" },
-  "ranger-telechargements-pro": { image: "/images/pro.png", imagePosition: "left" },
+// lignes 165 à 167
+"ranger-telechargements": { image: "/images/dossier.webp" },
+"photos-vers-word": { image: "/images/fusion.webp", imagePosition: "left" },
+"ranger-telechargements-pro": { image: "/images/pro.webp", imagePosition: "left" },
 };
 
 /* ════════════════════════════════════════════════════════════════════
@@ -1742,7 +1744,7 @@ export default function HomeClient({
           {/* Coin gauche : logo + titre (toujours visibles, même sur mobile) */}
           <Link href="/" className="flex min-w-0 items-center gap-2">
             <Image
-              src="/images/logo.png"
+              src="/images/logo.webp"
               alt="Automation Hub"
               width={44}
               height={44}

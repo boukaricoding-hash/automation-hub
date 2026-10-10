@@ -37,7 +37,7 @@ export default async function AllAutomations({
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 sm:px-8 lg:px-12">
           <Link href="/" className="flex min-w-0 items-center gap-2">
             <Image
-              src="/images/logo.png"
+              src="/images/logo.webp"
               alt="Automation Hub"
               width={44}
               height={44}
