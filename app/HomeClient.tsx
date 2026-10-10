@@ -462,7 +462,6 @@ function SlideVisual({
 }) {
   const visual = design.visual ?? "image";
   const image = design.image ?? HERO_IMAGE;
-  const fit = design.imageFit === "contain" ? "object-contain" : "object-cover";
   const codeLines = (a.code ?? "# Aucun code disponible").split("\n").slice(0, 14);
 
   // Animation d'entrée choisie selon la position du slide (1→5 puis on recommence)
@@ -501,7 +500,7 @@ function SlideVisual({
 
   return (
     <div
-      className={`relative h-[18dvh] w-full [@media(min-height:800px)_and_(max-width:639px)]:h-[22dvh] sm:h-[32dvh] lg:absolute lg:inset-y-0 lg:z-10 lg:h-auto lg:w-[58%] ${
+      className={`relative h-[26dvh] w-full [@media(min-height:800px)_and_(max-width:639px)]:h-[32dvh] sm:h-[32dvh] lg:absolute lg:inset-y-0 lg:z-10 lg:h-auto lg:w-[58%] ${
         left ? "lg:left-0" : "lg:right-0"
       }`}
     >
@@ -524,7 +523,7 @@ function SlideVisual({
               priority={index === 0}
               unoptimized
               sizes="(min-width: 1024px) 58vw, 100vw"
-              className={`${fit} object-center lg:object-contain`}
+              className="object-contain object-center"
               style={{
                 transform: c ? "scale(1) translate3d(0,0,0)" : reveal.zoom,
                 transition: `transform 2.6s ${EASE} 600ms`,
