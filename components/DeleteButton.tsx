@@ -31,11 +31,11 @@ export default function DeleteButton({
       <button
         onClick={handleClick}
         disabled={pending}
-        className="rounded-lg border border-red-500 px-3 py-1 text-sm text-red-400 disabled:opacity-50"
+        className="rounded-sm border border-error px-3 py-1.5 text-sm font-semibold text-error transition hover:bg-error/10 disabled:opacity-50"
       >
         {pending ? "Suppression..." : "🗑️ Supprimer"}
       </button>
-      {error && <p className="mt-1 text-sm text-red-400">{error}</p>}
+      {error && <p className="mt-1 text-sm text-error">{error}</p>}
     </div>
   );
 }

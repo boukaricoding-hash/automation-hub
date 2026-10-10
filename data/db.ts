@@ -452,6 +452,13 @@ export async function recordSearch(
   if (clean.length < 3) return; // on ignore les débuts de mot trop courts
   const { env } = await getCloudflareContext({ async: true });
 
+  // Protection : pas plus de 60 recherches enregistrées par minute (tous visiteurs confondus)
+  const recent = await env.DB.prepare(
+    `SELECT COUNT(*) AS n FROM searches
+     WHERE created_at >= datetime('now', '-60 seconds')`
+  ).first<{ n: number }>();
+  if ((recent?.n ?? 0) >= 60) return;
+
   // Un mot plus long vient d'être cherché : la personne est en train d'effacer, on ignore
   const longer = await env.DB.prepare(
     `SELECT 1 FROM searches

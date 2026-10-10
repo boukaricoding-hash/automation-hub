@@ -6,7 +6,7 @@ import { addAutomation, type FormState } from "@/app/admin/actions";
 const initialState: FormState = {};
 
 const inputClass =
-  "mt-1 w-full rounded-lg border border-gray-600 bg-transparent p-2";
+  "mt-1 w-full rounded-sm border border-border-strong bg-surface p-2.5 text-sm font-normal text-foreground outline-none transition focus:border-primary";
 
 export default function AdminForm() {
   const [state, formAction, pending] = useActionState(
@@ -15,7 +15,7 @@ export default function AdminForm() {
   );
 
   return (
-    <form action={formAction} className="mt-6 space-y-4">
+    <form action={formAction} className="mt-6 space-y-4 text-sm font-medium text-secondary">
       <label className="block">
         Titre
         <input name="title" required maxLength={100} className={inputClass} />
@@ -94,13 +94,13 @@ export default function AdminForm() {
       <button
         type="submit"
         disabled={pending}
-        className="rounded-lg bg-white px-5 py-2 font-semibold text-black disabled:opacity-50"
+        className="rounded-sm bg-secondary px-5 py-2.5 font-semibold text-on-secondary transition hover:bg-primary disabled:opacity-50"
       >
         {pending ? "Enregistrement..." : "Enregistrer"}
       </button>
 
-      {state.error && <p className="text-red-400">{state.error}</p>}
-      {state.success && <p className="text-green-400">{state.success}</p>}
+{state.error && <p className="text-error">{state.error}</p>}
+{state.success && <p className="text-success">{state.success}</p>}
     </form>
   );
 }
