@@ -26,7 +26,7 @@ export default function DownloadButton({
     <button
       onClick={handleClick}
       disabled={isPending}
-      className="mt-6 inline-block rounded-lg bg-white px-5 py-3 font-semibold text-black disabled:opacity-50"
+      className="mt-6 inline-flex items-center justify-center rounded-sm bg-secondary px-5 py-3 font-semibold text-on-secondary transition hover:bg-primary disabled:opacity-50"
     >
       {session
         ? `⬇️ Télécharger le fichier .${fileType}`

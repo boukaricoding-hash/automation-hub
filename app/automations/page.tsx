@@ -93,7 +93,7 @@ export default async function AllAutomations({
           </button>
         </form>
                 {/* Filtre par niveau */}
-        <div className="mt-5 flex flex-wrap items-center gap-2">
+        <div className="-mx-4 mt-5 flex items-center gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
           {[undefined, ...LEVELS].map((l) => {
             const active = l === level;
             const to = `/automations?${new URLSearchParams({
@@ -105,7 +105,7 @@ export default async function AllAutomations({
               <Link
                 key={l ?? "tous"}
                 href={to}
-                className={`inline-flex items-center gap-1.5 rounded-sm px-3 py-1.5 text-sm font-semibold transition ${
+                className={`inline-flex shrink-0 items-center gap-1.5 rounded-sm px-3 py-1.5 text-sm font-semibold transition ${
                   active
                     ? "bg-secondary text-on-secondary"
                     : "bg-surface text-foreground-secondary shadow-sm hover:text-foreground"
@@ -164,7 +164,7 @@ export default async function AllAutomations({
                       <Link
                         key={v.slug}
                         href={`/?a=${v.slug}`}
-                        className="inline-flex items-center gap-1.5 rounded-sm bg-background-alt px-2 py-1 text-[11px] font-semibold text-foreground-secondary transition hover:bg-secondary hover:text-on-secondary"
+                        className="inline-flex items-center gap-1.5 rounded-sm bg-background-alt px-3 py-2 text-xs font-semibold text-foreground-secondary transition hover:bg-secondary hover:text-on-secondary"
                       >
                         <span
                           className={`h-2 w-2 rounded-full ${levelDot[v.level] ?? "bg-foreground-muted"}`}

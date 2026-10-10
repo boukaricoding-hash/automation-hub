@@ -27,7 +27,8 @@ const EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
 
 // Couleur d'appoint (ambre) pour casser le « tout orange »
 const AMBER = "#F5B544";
-
+// Place réservée en haut quand la recherche est ouverte (en pixels).
+// Plus petit = le contenu descend moins. Trop petit = la barre touche le contenu.
 // Ordre d'affichage des niveaux dans le sélecteur
 const LEVEL_ORDER = ["Débutant", "Intermédiaire", "Avancé"];
 
@@ -423,7 +424,7 @@ function WelcomeBanner({ w, c, left }: { w: Welcome; c: boolean; left: boolean }
         {/* key = la phrase : quand elle change, elle réapparaît en douceur */}
         <p
           key={w.message}
-          className="ah-fade line-clamp-2 text-xs leading-snug text-foreground-secondary sm:text-[13px]"
+          className="ah-fade line-clamp-2 min-h-[2lh] text-xs leading-snug text-foreground-secondary sm:text-[13px]"
         >
           {w.message}
         </p>
@@ -498,7 +499,7 @@ function SlideVisual({
 
   return (
     <div
-      className={`relative h-[26dvh] w-full sm:h-[32dvh] lg:absolute lg:inset-y-0 lg:z-10 lg:h-auto lg:w-[58%] ${
+      className={`relative h-[18dvh] w-full [@media(min-height:800px)_and_(max-width:639px)]:h-[22dvh] sm:h-[32dvh] lg:absolute lg:inset-y-0 lg:z-10 lg:h-auto lg:w-[58%] ${
         left ? "lg:left-0" : "lg:right-0"
       }`}
     >
@@ -511,7 +512,7 @@ function SlideVisual({
         }}
       >
         {/* Contenu fondu dans la page (dégradé sur les bords) */}
-        <div className={`ah-blend absolute inset-0 ${left ? "ah-blend-left" : ""}`}>
+        <div className={`ah-blend absolute inset-0 lg:top-20 lg:bottom-6 ${left ? "ah-blend-left" : ""}`}>
           {/* ── Variante IMAGE ── */}
           {visual === "image" && (
             <Image
@@ -521,7 +522,7 @@ function SlideVisual({
               priority={index === 0}
               unoptimized
               sizes="(min-width: 1024px) 58vw, 100vw"
-              className={`${fit} object-center`}
+              className={`${fit} object-center lg:object-contain`}
               style={{
                 transform: c ? "scale(1) translate3d(0,0,0)" : reveal.zoom,
                 transition: `transform 2.6s ${EASE} 600ms`,
@@ -916,7 +917,7 @@ function AutomationSlide({
               {/* [F] Description courte (la version complète est dans « Détails & code ») */}
               <p
                 style={rise(c, 1250)}
-                className="mt-3 line-clamp-2 max-w-lg text-sm leading-relaxed text-foreground-secondary sm:line-clamp-3 sm:text-[15px]"
+                className="mt-3 line-clamp-2 max-w-lg text-sm leading-relaxed text-foreground-secondary [@media(min-height:800px)_and_(max-width:639px)]:line-clamp-4 sm:line-clamp-3 sm:text-[15px]"
               >
                 {a.description}
               </p>
@@ -954,15 +955,7 @@ function AutomationSlide({
                 </div>
               </div>
 
-              {/* Message pour les visiteurs sur téléphone */}
-              <p
-                style={rise(c, 1560)}
-                className="mt-3 flex items-start gap-2 rounded-sm border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-foreground md:hidden"
-              >
-                <Ico d={icons.monitor} className="mt-0.5 h-3.5 w-3.5 shrink-0 text-warning" />
-                Cette automatisation se lance sur un PC : ouvre cette page depuis
-                ton ordinateur pour la télécharger.
-              </p>
+
               {/* Visiteur sur téléphone : envoyer le lien vers son ordinateur */}
               <button
                 type="button"
@@ -1581,7 +1574,7 @@ export default function HomeClient({
   };
 
   useEffect(() => {
-    if (searchOpen) inputRef.current?.focus();
+    if (searchOpen) inputRef.current?.focus({ preventScroll: true });
   }, [searchOpen]);
     // Recherche dans TOUTES les automatisations (pas seulement les 5 du jour)
   useEffect(() => {
@@ -1756,9 +1749,9 @@ export default function HomeClient({
               priority
               className="h-9 w-9 shrink-0 object-contain sm:h-11 sm:w-11"
             />
-            <span className="truncate font-heading text-base uppercase leading-none tracking-wide text-secondary sm:text-xl">
-              Automation <span className="text-primary">Hub</span>
-            </span>
+<span className="font-heading text-[15px] uppercase leading-[1.05] tracking-wide text-secondary sm:text-xl sm:leading-none">
+  Automation <span className="block text-primary sm:inline">Hub</span>
+</span>
           </Link>
 
           {/* Coin droit : admin, recherche, compte */}
@@ -1960,7 +1953,8 @@ export default function HomeClient({
       )}
 
       {/* ─────────── SLIDES : un par tâche, pas de défilement ─────────── */}
-      <div className="absolute inset-0">
+{/* ─────────── SLIDES : un par tâche, pas de défilement ─────────── */}
+<div className="absolute inset-0">
         {total === 0 && (
           <div className="grid h-full place-items-center px-6">
             <p className="text-foreground-secondary">Aucune automatisation trouvée.</p>
