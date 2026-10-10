@@ -22,7 +22,7 @@ export default async function EditPage({
         <h1 className="text-2xl font-bold">Accès refusé</h1>
         <p className="mt-2">Cette page est réservée aux administrateurs.</p>
         <Link href="/" className="mt-4 inline-block underline">
-          ← Retour à l'accueil
+          ← Retour à l&apos;accueil
         </Link>
       </main>
     );
@@ -33,7 +33,7 @@ export default async function EditPage({
 
   return (
     <main className="mx-auto max-w-2xl p-6">
-      <h1 className="text-3xl font-bold">Modifier l'automatisation</h1>
+      <h1 className="text-3xl font-bold">Modifier l&apos;automatisation</h1>
       <EditForm automation={automation} />
     </main>
   );

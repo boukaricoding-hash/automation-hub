@@ -16,7 +16,7 @@ export default async function AdminPage() {
         <h1 className="text-2xl font-bold">Connexion requise</h1>
         <p className="mt-2">Connecte-toi pour accéder à cette page.</p>
         <Link href="/" className="mt-4 inline-block underline">
-          ← Retour à l'accueil
+          ← Retour à l&apos;accueil
         </Link>
       </main>
     );
@@ -114,11 +114,11 @@ export default async function AdminPage() {
 
       <h2 className="mt-12 text-2xl text-secondary">Recherches sans résultat</h2>
       <p className="mt-1 text-sm">
-        Ce que les visiteurs cherchent et que tu n'as pas encore : idées de
+        Ce que les visiteurs cherchent et que tu n&apos;as pas encore : idées de
         prochaines automatisations et de vidéos.
       </p>
       {emptySearches.length === 0 ? (
-        <p className="mt-4 text-sm">Aucune recherche pour l'instant.</p>
+        <p className="mt-4 text-sm">Aucune recherche pour l&apos;instant.</p>
       ) : (
         <div className="mt-4 overflow-x-auto rounded-sm bg-surface px-4 py-2 shadow-sm">
           <table className="w-full text-left text-sm">
